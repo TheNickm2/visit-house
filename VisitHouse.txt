@@ -1,7 +1,7 @@
 ## Title: VisitHouse
 ## Author: TheNickm2
-## Version: 1.0.0
-## APIVersion: 100033
+## Version: 1.1.0
+## APIVersion: 100033 100034
 ## DependsOn: LibSlashCommander
 ##
 ## This Add-on is not created by, affiliated with or sponsored by ZeniMax Media Inc. or its affiliates. 
