@@ -1,6 +1,6 @@
 ## Title: VisitHouse
 ## Author: TheNickm2
-## Version: 1.1.0
+## Version: 1.2.0
 ## APIVersion: 100034 100035
 ## DependsOn: LibSlashCommander
 ##
