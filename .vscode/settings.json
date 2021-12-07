@@ -1,0 +1,19 @@
+{
+    "Lua.diagnostics.globals": [
+        "JumpToHouse",
+        "GetGroupSize",
+        "GetGroupUnitTagByIndex",
+        "GetUnitDisplayName",
+        "GetFriendInfo",
+        "GetNumFriends",
+        "GetNumGuilds",
+        "GetGuildId",
+        "GetNumGuildMembers",
+        "GetGuildMemberInfo",
+        "GetCollectibleName",
+        "GetCollectibleIdForHouse",
+        "GetDisplayName",
+        "LibSlashCommander",
+        "d"
+    ]
+}
