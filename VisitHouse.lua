@@ -1,10 +1,49 @@
 --[[
-Function name: VisitHouse
+function name: StartsWith
+Parameter(s) required: str = string to test, start = character to test at start of string
+Purpose: Abstract away the annoying syntax to check if a string starts with a specific character
+Returns: Boolean
+--]]
+local function StartsWith(str, start)
+    return str:sub(1, #start) == start
+end
+
+--[[
+function name: IsEmpty
+Parameter(s) required: str = string to test
+Purpose: Abstract away the syntax to check if a string nil OR empty
+Returns: Boolean
+--]]
+local function IsEmpty(str)
+    return str == nil or str == ""
+end
+
+local function SplitString(inputstr, splitter)
+    if splitter == nil then
+        splitter = "%s"
+    end
+    local t = {}
+    for str in string.gmatch(inputstr, "([^" .. splitter .. "]+)") do
+        table.insert(t, str)
+    end
+    return t
+end
+
+local function TableLength(T)
+    local count = 0
+    for _ in pairs(T) do
+        count = count + 1
+    end
+    return count
+end
+
+--[[
+function name: VisitHouse
 Parameter(s) required: target playername as input
 Purpose: Take the provided player name and attempt to jump to their primary residence via the ESO API
 Returns: nil
 --]]
-function VisitHouseAutoComplete(input, allHouses)
+local function VisitHouseAutoComplete(input, allHouses)
     if (not input) or (input == "") or (input == nil) or (not input.player) then
         return
     end
@@ -35,7 +74,7 @@ function VisitHouseAutoComplete(input, allHouses)
     end
 end
 
-function VisitHouseManual(input, allHouses)
+local function VisitHouseManual(input, allHouses)
     local strSplit = SplitString(input)
     local player = strSplit[1]
     if not player then
@@ -76,12 +115,67 @@ function VisitHouseManual(input, allHouses)
 end
 
 --[[
-Function name: LoadPlayers
+function name: LoadGroup
+Parameter(s) required: none
+Purpose: Load all players from the user's group and return the list of player names
+Returns: Array<String> of player names
+--]]
+local function LoadGroup(playerName)
+    local group = {}
+    for i = 1, GetGroupSize() do
+        local unitTag = GetGroupUnitTagByIndex(i)
+        local displayName = GetUnitDisplayName(unitTag)
+        if (displayName ~= playerName) then
+            table.insert(group, displayName)
+        end
+    end
+    return group
+end
+
+--[[
+function name: LoadFriends
+Parameter(s) required: none
+Purpose: Load all players from the user's friends list and return the list of player names
+Returns: Array<String> of player names
+--]]
+local function LoadFriends(playerName)
+    local friends = {}
+    for i = 1, GetNumFriends() do
+        local displayName = GetFriendInfo(i)
+        if (displayName ~= playerName) then
+            table.insert(friends, displayName)
+        end
+    end
+    return friends
+end
+
+--[[
+function name: LoadGuildmates
+Parameter(s) required: none
+Purpose: Load all players from all of the user's guilds and return the list of player names
+Returns: Array<String> of player names
+--]]
+local function LoadGuildmates(playerName)
+    local guildMembers = {}
+    for g = 1, GetNumGuilds() do
+        local guildId = GetGuildId(g)
+        for i = 1, GetNumGuildMembers(guildId) do
+            local displayName = GetGuildMemberInfo(guildId, i)
+            if (displayName ~= playerName) then
+                table.insert(guildMembers, displayName)
+            end
+        end
+    end
+    return guildMembers
+end
+
+--[[
+function name: LoadPlayers
 Parameter(s) required: none
 Purpose: Load all players from the user's group, friend, and guild lists into a single array to use as command autocomplete output
 Returns: Array<String> of player names
 --]]
-function LoadPlayers(playerName)
+local function LoadPlayers(playerName)
     local playersList, groupList, friendsList, guildList = {}, LoadGroup(playerName), LoadFriends(playerName), LoadGuildmates(playerName)
     for _, player in ipairs(groupList) do
         table.insert(playersList, player)
@@ -105,67 +199,12 @@ function LoadPlayers(playerName)
 end
 
 --[[
-Function name: LoadGroup
-Parameter(s) required: none
-Purpose: Load all players from the user's group and return the list of player names
-Returns: Array<String> of player names
---]]
-function LoadGroup(playerName)
-    local group = {}
-    for i = 1, GetGroupSize() do
-        local unitTag = GetGroupUnitTagByIndex(i)
-        local displayName = GetUnitDisplayName(unitTag)
-        if (displayName ~= playerName) then
-            table.insert(group, displayName)
-        end
-    end
-    return group
-end
-
---[[
-Function name: LoadFriends
-Parameter(s) required: none
-Purpose: Load all players from the user's friends list and return the list of player names
-Returns: Array<String> of player names
---]]
-function LoadFriends(playerName)
-    local friends = {}
-    for i = 1, GetNumFriends() do
-        local displayName = GetFriendInfo(i)
-        if (displayName ~= playerName) then
-            table.insert(friends, displayName)
-        end
-    end
-    return friends
-end
-
---[[
-Function name: LoadGuildmates
-Parameter(s) required: none
-Purpose: Load all players from all of the user's guilds and return the list of player names
-Returns: Array<String> of player names
---]]
-function LoadGuildmates(playerName)
-    local guildMembers = {}
-    for g = 1, GetNumGuilds() do
-        local guildId = GetGuildId(g)
-        for i = 1, GetNumGuildMembers(guildId) do
-            local displayName = GetGuildMemberInfo(guildId, i)
-            if (displayName ~= playerName) then
-                table.insert(guildMembers, displayName)
-            end
-        end
-    end
-    return guildMembers
-end
-
---[[
-Function name: LoadHouses
+function name: LoadHouses
 Parameter(s) required: none
 Purpose: Load all ESO Houses into a table for ID look-up by name
 Returns: Table<String, Number> of player houses
 --]]
-function LoadHouses()
+local function LoadHouses()
     local allHouses = {}
     for houseId = 1, 200 do
         local houseName = GetCollectibleName(GetCollectibleIdForHouse(houseId))
@@ -191,78 +230,41 @@ function LoadHouses()
     return allHouses
 end
 
---[[
-Function name: StartsWith
-Parameter(s) required: str = string to test, start = character to test at start of string
-Purpose: Abstract away the annoying syntax to check if a string starts with a specific character
-Returns: Boolean
---]]
-function StartsWith(str, start)
-    return str:sub(1, #start) == start
-end
-
---[[
-Function name: IsEmpty
-Parameter(s) required: str = string to test
-Purpose: Abstract away the syntax to check if a string nil OR empty
-Returns: Boolean
---]]
-function IsEmpty(str)
-    return str == nil or str == ""
-end
-
-function SplitString(inputstr, splitter)
-    if splitter == nil then
-        splitter = "%s"
-    end
-    local t = {}
-    for str in string.gmatch(inputstr, "([^" .. splitter .. "]+)") do
-        table.insert(t, str)
-    end
-    return t
-end
-
-function TableLength(T)
-    local count = 0
-    for _ in pairs(T) do
-        count = count + 1
-    end
-    return count
-end
-
 -- Initialize command with aliases and load the player list into the command autocomplete
-local playerDisplayName = GetDisplayName()
+local function LoadAddon()
+    local playerDisplayName = GetDisplayName()
+    local allPlayers = LoadPlayers(playerDisplayName)
+    local houses = LoadHouses()
 
-local allPlayers = LoadPlayers(playerDisplayName)
-local houses = LoadHouses()
+    local houseNames = {}
+    for _, house in pairs(houses) do
+        if (not IsEmpty(house.name)) then
+            table.insert(houseNames, house.name)
+        end
+    end
+    
+    local LSC = LibSlashCommander
+    local command = LSC:Register()
+    command:AddAlias("/visit")
+    command:AddAlias("/gotohouse")
+    command:AddAlias("/jumptohouse")
+    command:SetDescription("Visit a player's in-game home")
+    command:SetCallback(function(input)
+        VisitHouseManual(input, houses)
+    end)
+    command:SetDescription("Jump to a player's house")
 
-local houseNames = {}
-for _, house in pairs(houses) do
-    if (not IsEmpty(house.name)) then
-        table.insert(houseNames, house.name)
+    for _, player in pairs(allPlayers) do
+        local subCmd = command:RegisterSubCommand()
+        subCmd:AddAlias(player)
+        subCmd:SetCallback(function(input)
+            local inputData = {
+                player = player,
+                house = input
+            }
+            VisitHouseAutoComplete(inputData, houses)
+        end)
+        subCmd:SetAutoComplete(houseNames)
     end
 end
-
-local LSC = LibSlashCommander
-local command = LSC:Register()
-command:AddAlias("/visit")
-command:AddAlias("/gotohouse")
-command:AddAlias("/jumptohouse")
-command:SetDescription("Visit a player's in-game home")
-command:SetCallback(function(input)
-    VisitHouseManual(input, houses)
-end)
-command:SetDescription("Jump to a player's house")
-
-for _, player in pairs(allPlayers) do
-    local subCmd = command:RegisterSubCommand()
-    subCmd:AddAlias(player)
-    subCmd:SetCallback(function(input)
-        local inputData = {
-            player = player,
-            house = input
-        }
-        VisitHouseAutoComplete(inputData, houses)
-    end)
-    subCmd:SetAutoComplete(houseNames)
-end
+LoadAddon()
